@@ -9,9 +9,9 @@ import pandas as pd
 from pandas import read_table
 import numpy as np
 import matplotlib.pyplot as plt
+import xlrd
 
-frame = pd.read_csv (r"NationalTreeSales.csv") 
-TARGET_COLUMN = 2
+frame = pd.read_excel(r"NationalTreeSales.xlsx") 
 
 
 
@@ -35,7 +35,7 @@ def get_features_and_labels(frame):
     # Use 50% of the data for training, but we will test against the
     # entire set
     from sklearn.model_selection import train_test_split
-    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.5)
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2)
     X_test, y_test = X, y
 
     
@@ -60,7 +60,7 @@ def evaluate_learner(X_train, X_test, y_train, y_test):
     from sklearn.svm import SVR
 
     # Train using a radial basis function
-    svr = SVR(kernel='rbf', gamma=0.1)
+    svr = SVR(kernel='rbf', gamma=1.0, tol=1e-5)
     svr.fit(X_train, y_train)
     y_pred = svr.predict(X_test)
     r_2 = svr.score(X_test, y_test)
@@ -97,18 +97,18 @@ def plot(results):
     for subplot, (title, y, y_pred) in zip(plts, results):
         # Configure each subplot to have no tick marks
         # (these are meaningless for the sample dataset)
-        subplot.set_xticklabels(())
+        subplot.set_xticklabels(tuple(frame["Year"]))
         subplot.set_yticklabels(())
 
         # Label the vertical axis
-        subplot.set_ylabel('stock price')
+        subplot.set_ylabel('Trees Sold')
 
         # Set the title for the subplot
         subplot.set_title(title)
 
         # Plot the actual data and the prediction
-        subplot.plot(y, 'b', label='actual')
-        subplot.plot(y_pred, 'r', label='predicted')
+        subplot.plot(y, 'g', label='actual')
+        subplot.plot(y_pred, 'r--', label='predicted')
         
         # Shade the area between the predicted and the actual values
         subplot.fill_between(
@@ -121,7 +121,7 @@ def plot(results):
         )
 
         # Mark the extent of the training data
-        subplot.axvline(len(y) // 2, linestyle='--', color='0', alpha=0.2)
+        subplot.axvline(np.floor(len(y) * 0.8), linestyle='--', color='0', alpha=0.2)
 
         # Include a legend in each subplot
         subplot.legend()
