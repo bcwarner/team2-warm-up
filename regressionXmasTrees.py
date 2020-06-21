@@ -10,11 +10,8 @@ from pandas import read_table
 import numpy as np
 import matplotlib.pyplot as plt
 
-frame = pd.read_csv (r"C:\Users\emmav\Documents\NationalTreeSales.csv", index_col = 0, header = 0) 
-TARGET_COLUMN = 8
-
-def download_data():read_table(frame, encoding = 'utf-8',sep=',',skipinitialspace=True,index_col = 0, header = 0)
-
+frame = pd.read_csv (r"NationalTreeSales.csv") 
+TARGET_COLUMN = 2
 
 
 
@@ -94,7 +91,7 @@ def plot(results):
 
     # Using subplots to display the results on the same X axis
     fig, plts = plt.subplots(nrows=len(results), figsize=(8, 8))
-    fig.canvas.set_window_title('Predicting data from ' + URL)
+    fig.canvas.set_window_title('Predicting data')
 
     # Show each element in the plots returned from plt.subplots()
     for subplot, (title, y, y_pred) in zip(plts, results):
@@ -139,20 +136,21 @@ def plot(results):
 
     # Closing the figure allows matplotlib to release the memory used.
     plt.close()
-    if __name__ == '__main__':
-    # Set data set to .csv file
-        frame = download_data()
 
 
-    # Process data into feature and label arrays
-        print("Processing {} samples with {} attributes".format(len(frame.index), len(frame.columns)))
-        X_train, X_test, y_train, y_test = get_features_and_labels(frame)
+if __name__ == '__main__':
+# Set data set to .csv file
 
-    # Evaluate multiple regression learners on the data
-        print("Evaluating regression learners")
-        results = list(evaluate_learner(X_train, X_test, y_train, y_test))
 
-    # Display the results
-        print("Plotting the results")
-        plot(results)
+# Process data into feature and label arrays
+    print("Processing {} samples with {} attributes".format(len(frame.index), len(frame.columns)))
+    X_train, X_test, y_train, y_test = get_features_and_labels(frame)
+
+# Evaluate multiple regression learners on the data
+    print("Evaluating regression learners")
+    results = list(evaluate_learner(X_train, X_test, y_train, y_test))
+
+# Display the results
+    print("Plotting the results")
+    plot(results)
         
