@@ -49,7 +49,6 @@ def get_features_and_labels(frame):
     scaler.fit(X_train)
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
-
     # Return the training and test sets
     return X_train, X_test, y_train, y_test
 
@@ -79,6 +78,7 @@ def evaluate_learner(X_train, X_test, y_train, y_test):
     y_pred = svr.predict(X_test)
     r_2 = svr.score(X_test, y_test)
     yield 'Polynomial Model ($R^2={:.3f}$)'.format(r_2), y_test, y_pred
+    
 
 def plot(results):
     '''
@@ -149,8 +149,8 @@ if __name__ == '__main__':
 # Evaluate multiple regression learners on the data
     print("Evaluating regression learners")
     results = list(evaluate_learner(X_train, X_test, y_train, y_test))
-
 # Display the results
     print("Plotting the results")
     plot(results)
+
         
