@@ -9,13 +9,18 @@ import pandas as pd
 from pandas import read_table
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import xlrd
 
 frame = pd.read_excel(r"NationalTreeSales.xlsx") 
-
-
+pred27 = None
+scaler = None
+minmax = None
 
 def get_features_and_labels(frame):
+    global pred27
+    global scaler
+    global minmax
     '''
     Transforms and scales the input data and returns numpy arrays for
     training and testing inputs and targets.
@@ -26,11 +31,13 @@ def get_features_and_labels(frame):
 
     # Normalize the entire data set
     from sklearn.preprocessing import StandardScaler, MinMaxScaler
-    arr = MinMaxScaler().fit_transform(arr)
+    minmax = MinMaxScaler()
+    minmax.fit(arr[:-1])
+    arr = minmax.transform(arr)
 
     # Use the last column as the target value
-    X, y = arr[:, :-1], arr[:, -1]
-
+    X, y = arr[:-1, :-1], arr[:-1, -1]
+    pred27 = arr[-1, :-1]
     
     # Use 50% of the data for training, but we will test against the
     # entire set
@@ -53,17 +60,22 @@ def get_features_and_labels(frame):
     return X_train, X_test, y_train, y_test
 
 def evaluate_learner(X_train, X_test, y_train, y_test):
-
-
+    global scaler
+    global pred27
+    global minmax 
     # Use a support vector machine for regression
     from sklearn.svm import SVR
 
     # Train using a radial basis function
-    svr = SVR(kernel='rbf', gamma=1.0, tol=1e-5)
+    svr = SVR(kernel='rbf', gamma='scale', tol=1e-5)
     svr.fit(X_train, y_train)
     y_pred = svr.predict(X_test)
     r_2 = svr.score(X_test, y_test)
     yield 'RBF Model ($R^2={:.3f}$)'.format(r_2), y_test, y_pred
+    f_scale = scaler.transform([pred27])
+    f_input = svr.predict(f_scale)
+    f_pred = minmax.inverse_transform([[0] * 9 + [f_input]])[0][-1]
+    print("RBF Prediction for 2027: " + str(f_pred))
 
     # Train using a linear kernel
     svr = SVR(kernel='linear')
@@ -71,6 +83,10 @@ def evaluate_learner(X_train, X_test, y_train, y_test):
     y_pred = svr.predict(X_test)
     r_2 = svr.score(X_test, y_test)
     yield 'Linear Model ($R^2={:.3f}$)'.format(r_2), y_test, y_pred
+    f_scale = scaler.transform([pred27])
+    f_input = svr.predict(f_scale)
+    f_pred = minmax.inverse_transform([[0] * 9 + [f_input]])[0][-1]
+    print("Linear Prediction for 2027: " + str(f_pred))
 
     # Train using a polynomial kernel
     svr = SVR(kernel='poly', degree=2)
@@ -78,6 +94,10 @@ def evaluate_learner(X_train, X_test, y_train, y_test):
     y_pred = svr.predict(X_test)
     r_2 = svr.score(X_test, y_test)
     yield 'Polynomial Model ($R^2={:.3f}$)'.format(r_2), y_test, y_pred
+    f_scale = scaler.transform([pred27])
+    f_input = svr.predict(f_scale)
+    f_pred = minmax.inverse_transform([[0] * 9 + [f_input]])[0][-1]
+    print("Poly Prediction for 2027: " + str(f_pred))
     
 
 def plot(results):
@@ -88,6 +108,7 @@ def plot(results):
     
     All the elements in results will be plotted.
     '''
+    global minmax
 
     # Using subplots to display the results on the same X axis
     fig, plts = plt.subplots(nrows=len(results), figsize=(8, 8))
@@ -97,8 +118,7 @@ def plot(results):
     for subplot, (title, y, y_pred) in zip(plts, results):
         # Configure each subplot to have no tick marks
         # (these are meaningless for the sample dataset)
-        subplot.set_xticklabels(tuple(frame["Year"]))
-        subplot.set_yticklabels(())
+        subplot.xaxis.set_major_formatter(ticker.IndexFormatter(frame["Year"]))
 
         # Label the vertical axis
         subplot.set_ylabel('Trees Sold')
